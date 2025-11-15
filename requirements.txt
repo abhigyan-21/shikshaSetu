@@ -1,0 +1,35 @@
+# Core Framework Dependencies
+flask==3.0.0
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+flask-cors==4.0.0
+flask-limiter==3.5.0
+slowapi==0.1.9
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.12.1
+
+# HTTP and API
+requests==2.31.0
+urllib3==2.1.0
+pydantic==2.5.0
+
+# Hugging Face and ML
+transformers==4.35.2
+torch==2.1.1
+sentencepiece==0.1.99
+
+# Audio Processing
+soundfile==0.12.1
+librosa==0.10.1
+pydub==0.25.1
+SpeechRecognition==3.10.0
+
+# Utilities
+python-dotenv==1.0.0
+
+# Testing
+httpx==0.25.2
+pytest==7.4.3

@@ -1,0 +1,35 @@
+# Hugging Face Spaces Configuration
+# This file configures the Space runtime environment
+
+sdk: docker
+sdk_version: "3.11"
+
+# Hardware configuration
+# Options: cpu-basic, cpu-upgrade, t4-small, t4-medium, a10g-small, a10g-large
+hardware: cpu-basic
+
+# Enable persistent storage for content caching
+storage: true
+
+# Environment variables (secrets should be set in Space settings)
+env:
+  - FLASK_DEBUG=false
+  - SQL_ECHO=false
+  - PORT=7860
+  - PYTHONUNBUFFERED=1
+
+# Suggested secrets to configure in Space settings:
+# - DATABASE_URL: PostgreSQL connection string
+# - HUGGINGFACE_API_KEY: HF API token for model inference
+# - FLASK_SECRET_KEY: Flask session secret
+# - POSTGRES_USER: Database username
+# - POSTGRES_PASSWORD: Database password
+# - POSTGRES_DB: Database name
+# - BHASHINI_API_KEY: (Optional) Bhashini TTS API key
+
+# App configuration
+app_port: 7860
+startup_duration_timeout: 120
+
+# Disable automatic model downloads (we'll use HF Inference API)
+disable_model_cache: false

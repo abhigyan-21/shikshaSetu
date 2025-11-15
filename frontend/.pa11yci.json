@@ -1,0 +1,13 @@
+{
+  "defaults": {
+    "standard": "WCAG2AA",
+    "runners": ["axe", "htmlcs"],
+    "timeout": 10000
+  },
+  "urls": [
+    "http://localhost:3000/",
+    "http://localhost:3000/upload",
+    "http://localhost:3000/content",
+    "http://localhost:3000/offline"
+  ]
+}

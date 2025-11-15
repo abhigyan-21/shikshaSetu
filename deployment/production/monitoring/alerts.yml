@@ -1,0 +1,195 @@
+# Prometheus Alert Rules
+# Defines alerting conditions for the education content pipeline
+
+groups:
+  - name: pipeline_alerts
+    interval: 30s
+    rules:
+      # High error rate alert (>10% over 1 hour)
+      - alert: HighPipelineErrorRate
+        expr: |
+          (
+            sum(rate(pipeline_errors_total[1h])) 
+            / 
+            sum(rate(pipeline_requests_total[1h]))
+          ) > 0.10
+        for: 5m
+        labels:
+          severity: critical
+          component: pipeline
+        annotations:
+          summary: "High pipeline error rate detected"
+          description: "Pipeline error rate is {{ $value | humanizePercentage }} over the last hour (threshold: 10%)"
+
+      # Stage-specific error rate alerts
+      - alert: HighStageErrorRate
+        expr: |
+          (
+            sum by (stage) (rate(pipeline_stage_errors_total[1h]))
+            /
+            sum by (stage) (rate(pipeline_stage_requests_total[1h]))
+          ) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          component: pipeline
+        annotations:
+          summary: "High error rate in {{ $labels.stage }} stage"
+          description: "Stage {{ $labels.stage }} error rate is {{ $value | humanizePercentage }} (threshold: 10%)"
+
+      # Slow processing time
+      - alert: SlowPipelineProcessing
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(pipeline_processing_duration_seconds_bucket[5m])) by (le)
+          ) > 120
+        for: 10m
+        labels:
+          severity: warning
+          component: pipeline
+        annotations:
+          summary: "Pipeline processing is slow"
+          description: "95th percentile processing time is {{ $value }}s (threshold: 120s)"
+
+      # Low NCERT alignment scores
+      - alert: LowNCERTAlignment
+        expr: |
+          avg(ncert_alignment_score) < 0.80
+        for: 15m
+        labels:
+          severity: warning
+          component: validation
+        annotations:
+          summary: "Low NCERT alignment scores detected"
+          description: "Average NCERT alignment score is {{ $value }} (threshold: 0.80)"
+
+      # Low audio accuracy
+      - alert: LowAudioAccuracy
+        expr: |
+          avg(audio_accuracy_score) < 0.90
+        for: 15m
+        labels:
+          severity: warning
+          component: speech
+        annotations:
+          summary: "Low audio accuracy scores detected"
+          description: "Average audio accuracy score is {{ $value }} (threshold: 0.90)"
+
+  - name: infrastructure_alerts
+    interval: 30s
+    rules:
+      # API service down
+      - alert: APIServiceDown
+        expr: up{job="flask_api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Flask API service is down"
+          description: "Flask API has been down for more than 2 minutes"
+
+      # Database connection issues
+      - alert: DatabaseConnectionFailure
+        expr: up{job=~"postgres.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection failure"
+          description: "Cannot connect to {{ $labels.job }}"
+
+      # High API response time
+      - alert: HighAPIResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(flask_http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile API response time is {{ $value }}s (threshold: 5s)"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) 
+          / node_memory_MemTotal_bytes > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }} (threshold: 90%)"
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+
+      # Disk space running low
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} 
+          / node_filesystem_size_bytes{mountpoint="/"}) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Disk space running low"
+          description: "Available disk space is {{ $value | humanizePercentage }} (threshold: 15%)"
+
+      # Redis connection failure
+      - alert: RedisConnectionFailure
+        expr: up{job="redis"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis connection failure"
+          description: "Cannot connect to Redis cache"
+
+  - name: quality_alerts
+    interval: 60s
+    rules:
+      # Validation rejection rate too high
+      - alert: HighValidationRejectionRate
+        expr: |
+          (
+            sum(rate(validation_rejections_total[1h]))
+            /
+            sum(rate(validation_checks_total[1h]))
+          ) > 0.20
+        for: 10m
+        labels:
+          severity: warning
+          component: validation
+        annotations:
+          summary: "High validation rejection rate"
+          description: "Validation rejection rate is {{ $value | humanizePercentage }} (threshold: 20%)"
+
+      # Retry rate too high
+      - alert: HighRetryRate
+        expr: |
+          sum(rate(pipeline_retries_total[1h])) > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: pipeline
+        annotations:
+          summary: "High pipeline retry rate"
+          description: "Pipeline retry rate is {{ $value }} retries/hour"

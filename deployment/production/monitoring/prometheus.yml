@@ -1,0 +1,58 @@
+# Prometheus Configuration
+# Monitors Flask API, PostgreSQL, and system metrics
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'education-content-pipeline'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - alertmanager:9093
+
+# Load rules
+rule_files:
+  - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Flask API metrics
+  - job_name: 'flask_api'
+    static_configs:
+      - targets: ['flask_api:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # PostgreSQL primary metrics
+  - job_name: 'postgres_primary'
+    static_configs:
+      - targets: ['postgres_primary:5432']
+    scrape_interval: 30s
+
+  # PostgreSQL replica metrics
+  - job_name: 'postgres_replica'
+    static_configs:
+      - targets: ['postgres_replica1:5432']
+    scrape_interval: 30s
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  # Node exporter for system metrics
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node_exporter:9100']
+    scrape_interval: 15s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
